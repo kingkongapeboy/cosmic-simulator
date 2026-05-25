@@ -1,0 +1,772 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quantum Cosmic Sandbox - Extreme Anomalies Library V25.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { margin: 0; background-color: #010204; color: #66fcf1; font-family: sans-serif; overflow: hidden; transition: color 0.4s ease; }
+        #canvas-container { width: 100vw; height: 38vh; position: relative; cursor: grab; }
+        #canvas-container:active { cursor: grabbing; }
+
+        #ui-panel {
+            height: 62vh; background: linear-gradient(180deg, #03050a 0%, #000102 100%);
+            padding: 4px 8px; box-sizing: border-box; display: flex; flex-direction: column;
+            border-top: 2px solid #45a29e; overflow-y: auto;
+        }
+        .controls { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+        .slider-row { display: flex; justify-content: space-between; width: 100%; gap: 4px; }
+        .slider-box { display: flex; flex-direction: column; width: 100%; }
+        .three-column { width: 33%; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 3.5fr; gap: 4px; background: rgba(255,255,255,0.01); padding: 2px; border-radius: 4px; }
+        .dash-section { background: rgba(0,0,0,0.35); border: 1px dashed rgba(102,252,241,0.12); padding: 4px; border-radius: 4px; display: flex; flex-direction: column; gap: 2px; }
+
+        .filter-tier { display: flex; flex-direction: column; gap: 1px; margin-bottom: 2px; padding-bottom: 2px; border-bottom: 1px dashed rgba(69,162,158,0.1); }
+        .tier-title { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; font-weight: bold; }
+        .filter-cluster { display: flex; flex-wrap: wrap; gap: 2px; }
+
+        label { font-weight: bold; margin-bottom: 1px; font-size: 8px; letter-spacing: 0.3px; color: #45a29e; text-transform: uppercase; }
+        .master-box label { color: #fff; text-shadow: 0 0 4px #66fcf1; }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; background: #070d14; height: 2px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 8px; height: 8px; border-radius: 50%; background: #66fcf1; cursor: pointer; }
+        input[type=range]:disabled { opacity: 0.1; }
+
+        .btn-action { background: #070d14; color: #66fcf1; border: 1px solid #45a29e; padding: 2px 4px; font-weight: bold; font-size: 8px; border-radius: 2px; cursor: pointer; text-transform: uppercase; transition: all 0.1s ease; }
+        .btn-action:hover { background: rgba(102,252,241,0.08); }
+        .btn-action.active { background: #66fcf1; color: #020204; box-shadow: 0 0 4px #66fcf1; border-color: #66fcf1; }
+        .btn-f { font-size: 7.5px; padding: 1px 3px; border-color: rgba(69,162,158,0.25); }
+
+        /* Fixed Color Engine Dynamic Target Themes */
+        #filterDefault.active { background: #66fcf1; color: #000; }
+        #filterPlasma.active { background: #ff00aa; color: #fff; }
+        #filterSun.active { background: #ff5500; color: #fff; }
+        #filterBlueGiant.active { background: #00e5ff; color: #000; }
+        #filterPulsar.active { background: #ffff00; color: #000; }
+        #filterMagnetar.active { background: #ff3300; color: #fff; }
+        #filterKilonova.active { background: #ffffff; color: #000; }
+        #filterSupernova1a.active { background: #ffaaef; color: #000; }
+        #filterSupernova2.active { background: #ff33aa; color: #fff; }
+        #filterPrzybylski.active { background: #00ffcc; color: #000; }
+        #filterTabbysStar.active { background: #ae81ff; color: #fff; }
+
+        #filterMercury.active { background: #8a8a8a; color: #fff; }
+        #filterVenus.active { background: #e39b5d; color: #000; }
+        #filterEarth.active { background: #00aaff; color: #fff; }
+        #filterMars.active { background: #c1440e; color: #fff; }
+        #filterJupiter.active { background: #d4a373; color: #000; }
+        #filterSaturn.active { background: #f4e2bb; color: #000; }
+        #filterUranus.active { background: #4b70dd; color: #fff; }
+        #filterNeptune.active { background: #274687; color: #fff; }
+        #filterPluto.active { background: #9fa8a3; color: #000; }
+
+        #filterHotjupiter.active { background: #ff7700; color: #fff; }
+        #filterSuperearth.active { background: #55ff55; color: #000; }
+        #filterRogueplanet.active { background: #3a4454; color: #fff; }
+
+        #filterMilkyWay.active { background: #9933ff; color: #fff; }
+        #filterSpiralGalaxy.active { background: #00ffaa; color: #000; }
+        #filterHoagsObject.active { background: #ffbb00; color: #000; }
+        #filterQuarkStar.active { background: #4a00e0; color: #fff; }
+        #filterBlackHole.active { background: #444444; color: #fff; }
+        #filterSagittariusA.active { background: #ff0055; color: #fff; }
+        #filterPillars.active { background: #00ff66; color: #000; }
+        #filterBootesVoid.active { background: #1c1c24; color: #888; }
+
+        .section-title { font-size: 8px; font-weight: bold; color: #fff; opacity: 0.3; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(102,252,241,0.05); padding-bottom: 1px; margin-top: 1px; }
+        .title-banner { text-align: center; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #fff; text-shadow: 0 0 4px #45a29e; }
+        .cam-hint { text-align: center; font-size: 7.5px; color: #45a29e; opacity: 0.6; margin-top: -1px; }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <div class="title-banner" id="bannerText">Astrological Physics Sandbox V25.0</div>
+        <div class="cam-hint" id="hintText">✨ Total State Leak Color Correction Update with Expanded Nova and Planetary Modifiers.</div>
+        <div class="controls">
+
+            <div class="dashboard-grid">
+                <div class="dash-section" id="utilSection">
+                    <div class="slider-box master-box">
+                        <label id="master-label">🌌 P.F.I. INDEX: 0.640</label>
+                        <input type="range" id="masterSlider" min="0" max="1" step="0.001" value="0.640">
+                    </div>
+                    <button class="btn-action" id="loopBtn" style="font-size: 7.5px; padding: 1px;">Loop: OFF</button>
+                    <button class="btn-action" id="viewModeBtn" style="font-size: 7.5px; padding: 1px;">Manifold</button>
+                    <button class="btn-action" id="resetBtn" style="background: #20070c; color: #ff4455; border-color: #6e1d24; font-size: 7.5px; padding: 1px;">Reset</button>
+                    <select id="presetSelect" style="background: #070d14; color: #66fcf1; border: 1px solid #45a29e; font-size: 7.5px; font-weight: bold; outline: none; padding: 1px;">
+                        <option value="triclinic" selected>Triclinic System</option>
+                        <option value="cubic">Cubic System</option>
+                        <option value="tetragonal">Tetragonal System</option>
+                        <option value="orthorhombic">Orthorhombic System</option>
+                        <option value="monoclinic">Monoclinic System</option>
+                    </select>
+                </div>
+
+                <div class="dash-section" id="filterSection">
+                    <div class="filter-tier">
+                        <div class="tier-title">Stellar Profiles &amp; Energetic Novae</div>
+                        <div class="filter-cluster">
+                            <button class="btn-action btn-f active" id="filterDefault">🌈 EM Spectrum</button>
+                            <button class="btn-action btn-f" id="filterPlasma">🔮 Plasma</button>
+                            <button class="btn-action btn-f" id="filterSun">☀️ Sun</button>
+                            <button class="btn-action btn-f" id="filterBlueGiant">💎 Blue Giant</button>
+                            <button class="btn-action btn-f" id="filterPulsar">⚡ Pulsar</button>
+                            <button class="btn-action btn-f" id="filterMagnetar">🧲 Magnetar</button>
+                            <button class="btn-action btn-f" id="filterKilonova">💥 Kilonova</button>
+                            <button class="btn-action btn-f" id="filterSupernova1a">✨ Supernova Ia</button>
+                            <button class="btn-action btn-f" id="filterSupernova2">💥 Supernova II</button>
+                            <button class="btn-action btn-f" id="filterPrzybylski">🧪 Przybylski</button>
+                            <button class="btn-action btn-f" id="filterTabbysStar">🧱 Tabby's</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-tier">
+                        <div class="tier-title">Solar Planets &amp; Dwarf Dynamics</div>
+                        <div class="filter-cluster">
+                            <button class="btn-action btn-f" id="filterMercury">☄️ Mercury</button>
+                            <button class="btn-action btn-f" id="filterVenus">🌋 Venus</button>
+                            <button class="btn-action btn-f" id="filterEarth">🌍 Earth</button>
+                            <button class="btn-action btn-f" id="filterMars">🔴 Mars</button>
+                            <button class="btn-action btn-f" id="filterJupiter">🪐 Jupiter</button>
+                            <button class="btn-action btn-f" id="filterSaturn">🪐 Saturn</button>
+                            <button class="btn-action btn-f" id="filterUranus">🧊 Uranus</button>
+                            <button class="btn-action btn-f" id="filterNeptune">🌀 Neptune</button>
+                            <button class="btn-action btn-f" id="filterPluto">🌑 Pluto [Dwarf]</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-tier">
+                        <div class="tier-title">Exoplanetary Classes</div>
+                        <div class="filter-cluster">
+                            <button class="btn-action btn-f" id="filterHotjupiter">🔥 Hot Jupiter</button>
+                            <button class="btn-action btn-f" id="filterSuperearth">⛰️ Super-Earth</button>
+                            <button class="btn-action btn-f" id="filterRogueplanet">🌌 Rogue Planet</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-tier" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                        <div class="tier-title">Cosmic Horizons &amp; Singularities</div>
+                        <div class="filter-cluster">
+                            <button class="btn-action btn-f" id="filterMilkyWay">🌌 Milky Way Core</button>
+                            <button class="btn-action btn-f" id="filterSpiralGalaxy">🌀 Spiral Arm</button>
+                            <button class="btn-action btn-f" id="filterHoagsObject">⭕ Hoag's Object</button>
+                            <button class="btn-action btn-f" id="filterQuarkStar">⚛️ Quark Star</button>
+                            <button class="btn-action btn-f" id="filterBlackHole">🕳️ Black Hole</button>
+                            <button class="btn-action btn-f" id="filterSagittariusA">🚨 Sagittarius A*</button>
+                            <button class="btn-action btn-f" id="filterPillars">🌲 Pillars</button>
+                            <button class="btn-action btn-f" id="filterBootesVoid">🚏 Boötes Void</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slider-row" style="background: rgba(255,255,255,0.01); padding: 2px; border-radius: 4px;">
+                <div class="slider-box style-box" style="width: 33%;">
+                    <label id="pfi-speed-label">⏳ P.F.I. LOOP SPEED: 1.0x</label>
+                    <input type="range" id="pfiSpeedSlider" min="0.1" max="3.0" step="0.05" value="1.0">
+                </div>
+                <div class="slider-box style-box" style="width: 33%;">
+                    <label id="speed-label">🌊 WAVE TURBULENCE: 1.0x</label>
+                    <input type="range" id="speedSlider" min="0.0" max="3.0" step="0.05" value="1.0">
+                </div>
+                <div class="slider-box style-box" style="width: 33%;">
+                    <label id="conduit-label">✨ PLASMA GLOW: 0.19</label>
+                    <input type="range" id="conduitSlider" min="0.0" max="1.0" step="0.01" value="0.19">
+                </div>
+            </div>
+
+            <div class="section-title">Lattice Vector Spacing (Lengths)</div>
+            <div class="slider-row">
+                <div class="slider-box three-column">
+                    <label id="a-label">Vector [a]: 0.90</label>
+                    <input type="range" id="paramA" min="0.4" max="2.0" step="0.01" value="0.90">
+                </div>
+                <div class="slider-box three-column">
+                    <label id="b-label">Vector [b]: 1.05</label>
+                    <input type="range" id="paramB" min="0.4" max="2.0" step="0.01" value="1.05">
+                </div>
+                <div class="slider-box three-column">
+                    <label id="c-label">Vector [c]: 1.20</label>
+                    <input type="range" id="paramC" min="0.4" max="2.0" step="0.01" value="1.20">
+                </div>
+            </div>
+
+            <div class="section-title">Lattice Angular Shear (Degrees)</div>
+            <div class="slider-row">
+                <div class="slider-box three-column">
+                    <label id="alpha-label">Shear [α]: 82.0°</label>
+                    <input type="range" id="paramAlpha" min="45" max="135" step="0.5" value="82">
+                </div>
+                <div class="slider-box three-column">
+                    <label id="beta-label">Shear [β]: 101.5°</label>
+                    <input type="range" id="paramBeta" min="45" max="135" step="0.5" value="101.5">
+                </div>
+                <div class="slider-box three-column">
+                    <label id="gamma-label">Shear [γ]: 96.0°</label>
+                    <input type="range" id="paramGamma" min="45" max="135" step="0.5" value="96">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- MULTI-OCTAVE NOISE ENGINE ---
+        const P = new Uint8Array(256); for (let i=0; i<256; i++) P[i] = Math.floor(Math.random()*256);
+        const PERM = new Uint8Array(512); for (let i=0; i<512; i++) PERM[i] = P[i & 255];
+        function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+        defLerp = (t, a, b) => a + t * (b - a);
+        function grad(hash, x, y, z) {
+            const h = hash & 15; const u = h < 8 ? x : y;
+            const v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+            return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+        }
+        function noise3D(x, y, z) {
+            const X = Math.floor(x) & 255; const Y = Math.floor(y) & 255; const Z = Math.floor(z) & 255;
+            x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+            const u = fade(x); const v = fade(y); const w = fade(z);
+            const A = PERM[X]+Y; const AA = PERM[A]+Z; const AB = PERM[A+1]+Z;
+            const B = PERM[X+1]+Y; const BB = PERM[B]+Z; const BA = PERM[B+1]+Z;
+            return defLerp(w, defLerp(v, defLerp(u, grad(PERM[AA], x, y, z), grad(PERM[BA], x-1, y, z)),
+                                         defLerp(u, grad(PERM[AB], x, y-1, z), grad(PERM[BA+1], x-1, y-1, z))),
+                              defLerp(v, defLerp(u, grad(PERM[AA+1], x, y, z-1), grad(PERM[BA+1], x-1, y, z-1)),
+                                         defLerp(u, grad(PERM[AB+1], x, y-1, z-1), grad(PERM[BB+1], x-1, y-1, z-1))));
+        }
+        function fbm(x, y, z, octaves=3) {
+            let value = 0; let amplitude = 1.0; let frequency = 1.0;
+            for (let i=0; i<octaves; i++) {
+                value += amplitude * noise3D(x*frequency, y*frequency, z*frequency);
+                amplitude *= 0.5; frequency *= 2.0;
+            }
+            return value;
+        }
+
+        // --- WEBGL ENVIRONMENT ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene(); scene.background = new THREE.Color(0x010204);
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(4, 4, 7);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.dampingFactor = 0.05;
+
+        const manifoldGroup = new THREE.Group(); const gridGroup = new THREE.Group();
+        scene.add(manifoldGroup); scene.add(gridGroup);
+
+        const uRes = 45; const vRes = 45; const totalPointsManifold = (uRes + 1) * (vRes + 1);
+        const dimX = 10; const dimY = 10; const dimZ = 10; const totalPointsGrid = dimX * dimY * dimZ;
+        const pointsPerConduit = 14;
+
+        // --- ALLOCATE SHADER BUFFERS ---
+        const geomManifoldLines = new THREE.BufferGeometry(); const geomManifoldNodes = new THREE.BufferGeometry(); const geomManifoldPlasm  = new THREE.BufferGeometry();
+        const baseCoordsManifold = new Float32Array(totalPointsManifold * 3); const uvParamManifold = new Float32Array(totalPointsManifold * 2);
+        const dynPosManifold = new Float32Array(totalPointsManifold * 3); const dynColManifold = new Float32Array(totalPointsManifold * 3);
+        const dynPlasmManifold = new Float32Array(totalPointsManifold * (pointsPerConduit - 1) * 2 * 3);
+
+        let idxM = 0;
+        for (let i = 0; i <= uRes; i++) {
+            let uVal = (i / uRes) * Math.PI * 2;
+            for (let j = 0; j <= vRes; j++) {
+                let vVal = (j / vRes) * Math.PI * 2;
+                baseCoordsManifold[idxM * 3]     = (1.8 + Math.cos(uVal / 2) * Math.sin(vVal) - Math.sin(uVal / 2) * Math.sin(2 * vVal)) * Math.cos(uVal);
+                baseCoordsManifold[idxM * 3 + 1] = (1.8 + Math.cos(uVal / 2) * Math.sin(vVal) - Math.sin(uVal / 2) * Math.sin(2 * vVal)) * Math.sin(uVal);
+                baseCoordsManifold[idxM * 3 + 2] = Math.sin(uVal / 2) * Math.sin(vVal) + Math.cos(uVal / 2) * Math.sin(2 * vVal);
+                uvParamManifold[idxM * 2]     = uVal; uvParamManifold[idxM * 2 + 1] = vVal;
+                idxM++;
+            }
+        }
+        const indicesManifoldLines = [];
+        for (let i = 0; i < uRes; i++) {
+            for (let j = 0; j < vRes; j++) {
+                let p1 = i * (vRes + 1) + j; let p2 = (i + 1) * (vRes + 1) + j; let p3 = i * (vRes + 1) + (j + 1);
+                indicesManifoldLines.push(p1, p2, p1, p3);
+            }
+        }
+        geomManifoldLines.setAttribute('position', new THREE.BufferAttribute(dynPosManifold, 3)); geomManifoldLines.setIndex(indicesManifoldLines);
+        geomManifoldNodes.setAttribute('position', new THREE.BufferAttribute(dynPosManifold, 3)); geomManifoldNodes.setAttribute('color', new THREE.BufferAttribute(dynColManifold, 3));
+        geomManifoldPlasm.setAttribute('position', new THREE.BufferAttribute(dynPlasmManifold, 3));
+
+        const meshManifoldLines = new THREE.LineSegments(geomManifoldLines, new THREE.LineBasicMaterial({ color: 0x45a29e, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false }));
+        const meshManifoldNodes = new THREE.Points(geomManifoldNodes, new THREE.PointsMaterial({ size: 0.08, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+        const meshManifoldPlasm = new THREE.LineSegments(geomManifoldPlasm, new THREE.LineBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
+        manifoldGroup.add(meshManifoldLines, meshManifoldNodes, meshManifoldPlasm);
+
+        const geomGridLines = new THREE.BufferGeometry(); const geomGridNodes = new THREE.BufferGeometry(); const geomGridPlasm  = new THREE.BufferGeometry();
+        const baseCoordsGrid = new Float32Array(totalPointsGrid * 3); const dynPosGrid = new Float32Array(totalPointsGrid * 3);
+        const dynColGrid = new Float32Array(totalPointsGrid * 3); const dynPlasmGrid = new Float32Array(totalPointsGrid * (pointsPerConduit - 1) * 2 * 3);
+
+        let idxG = 0;
+        for (let x = 0; x < dimX; x++) {
+            for (let y = 0; y < dimY; y++) {
+                for (let z = 0; z < dimZ; z++) {
+                    baseCoordsGrid[idxG * 3]     = (x / (dimX - 1) - 0.5) * 3.6;
+                    baseCoordsGrid[idxG * 3 + 1] = (y / (dimY - 1) - 0.5) * 3.6;
+                    baseCoordsGrid[idxG * 3 + 2] = (z / (dimZ - 1) - 0.5) * 3.6;
+                    idxG++;
+                }
+            }
+        }
+        const indicesGridLines = [];
+        for (let x = 0; x < dimX; x++) {
+            for (let y = 0; y < dimY; y++) {
+                for (let z = 0; z < dimZ; z++) {
+                    let curr = x * (dimY * dimZ) + y * dimZ + z;
+                    if (x < dimX - 1) indicesGridLines.push(curr, curr + (dimY * dimZ));
+                    if (y < dimY - 1) indicesGridLines.push(curr, curr + dimZ);
+                    if (z < dimZ - 1) indicesGridLines.push(curr, curr + 1);
+                }
+            }
+        }
+        geomGridLines.setAttribute('position', new THREE.BufferAttribute(dynPosGrid, 3)); geomGridLines.setIndex(indicesGridLines);
+        geomGridNodes.setAttribute('position', new THREE.BufferAttribute(dynPosGrid, 3)); geomGridNodes.setAttribute('color', new THREE.BufferAttribute(dynColGrid, 3));
+        geomGridPlasm.setAttribute('position', new THREE.BufferAttribute(dynPlasmGrid, 3));
+
+        const meshGridLines = new THREE.LineSegments(geomGridLines, new THREE.LineBasicMaterial({ color: 0x45a29e, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false }));
+        const meshGridNodes = new THREE.Points(geomGridNodes, new THREE.PointsMaterial({ size: 0.08, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+        const meshGridPlasm = new THREE.LineSegments(geomGridPlasm, new THREE.LineBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
+        gridGroup.add(meshGridLines, meshGridNodes, meshGridPlasm); gridGroup.visible = false;
+
+        // --- COUPLING AND INTERACTION PARSERS ---
+        const masterSlider = document.getElementById('masterSlider'); const speedSlider = document.getElementById('speedSlider');
+        const pfiSpeedSlider = document.getElementById('pfiSpeedSlider'); const conduitSlider = document.getElementById('conduitSlider');
+        const loopBtn = document.getElementById('loopBtn'); const viewModeBtn = document.getElementById('viewModeBtn');
+        const resetBtn = document.getElementById('resetBtn'); const presetSelect = document.getElementById('presetSelect');
+        const filterButtons = document.querySelectorAll('.btn-f');
+
+        const DEFAULTS = { a: 0.90, b: 1.05, c: 1.20, alpha: 82.0, beta: 101.5, gamma: 96.0, pfi: 0.640, glow: 0.19 };
+        let currentSystem = "triclinic"; let trackingViewMode = "manifold";
+        let automationActive = false; let automationDirection = 1; let activeOverlayMode = "default";
+
+        resetBtn.addEventListener('click', () => {
+            automationActive = false; loopBtn.classList.remove('active'); loopBtn.innerText = "Loop: OFF";
+            masterSlider.value = DEFAULTS.pfi; conduitSlider.value = DEFAULTS.glow; speedSlider.value = 1.0; pfiSpeedSlider.value = 1.0;
+            pA.value = DEFAULTS.a; pB.value = DEFAULTS.b; pC.value = DEFAULTS.c;
+            pAlpha.value = DEFAULTS.alpha; pBeta.value = DEFAULTS.beta; pGamma.value = DEFAULTS.gamma;
+            currentSystem = "triclinic"; presetSelect.value = "triclinic"; applySystemEnforcement();
+            controls.reset(); camera.position.set(4, 4, 7);
+        });
+
+        loopBtn.addEventListener('click', () => { automationActive = !automationActive; loopBtn.classList.toggle('active', automationActive); loopBtn.innerText = automationActive ? "Loop: ON" : "Loop: OFF"; });
+        viewModeBtn.addEventListener('click', () => {
+            trackingViewMode = (trackingViewMode === "manifold") ? "grid" : "manifold";
+            viewModeBtn.innerText = trackingViewMode === "manifold" ? "Manifold" : "Unit Grid";
+            viewModeBtn.classList.toggle('active', trackingViewMode === "grid");
+            manifoldGroup.visible = (trackingViewMode === "manifold"); gridGroup.visible = (trackingViewMode === "grid");
+        });
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                activeOverlayMode = btn.id.replace('filter', '').toLowerCase(); applyDynamicThemeStyles();
+            });
+        });
+
+        // --- FIXED STATE COLOUR THEMES & CODES MATRIX (V25.0) ---
+        function applyDynamicThemeStyles() {
+            const panel = document.getElementById('ui-panel'); const banner = document.getElementById('bannerText'); const hint = document.getElementById('hintText');
+            panel.style.borderColor = "#45a29e"; document.body.style.color = "#66fcf1"; scene.background = new THREE.Color(0x010204);
+
+            const themes = {
+                default: { bg: "linear-gradient(180deg, #050810 0%, #010205 100%)", title: "Electromagnetic Spectrum Lab V25.0", hint: "🌈 State-leak proof color matrix shifting colors based on exact spatial coordinates.", border: "#66fcf1" },
+                plasma: { bg: "linear-gradient(180deg, #15001a 0%, #030005 100%)", title: "Quantum Plasma Ball Manifold", hint: "🔮 High-frequency static paths responding to spatial coordinate shifts.", border: "#ff00aa" },
+                sun: { bg: "linear-gradient(180deg, #120500 0%, #020100 100%)", title: "Stellar Photosphere Engine", hint: "☀️ Volumetric noise maps burning convection granulations and magnetic loops.", border: "#ff4400" },
+                bluegiant: { bg: "linear-gradient(180deg, #001520 0%, #000205 100%)", title: "Hyper-Massive O-Type Blue Giant Core", hint: "💎 Maximum radiation pressure vectors driving shortwave high-intensity ultraviolet channels.", border: "#00e5ff" },
+                pulsar: { bg: "linear-gradient(180deg, #1a1a00 0%, #050500 100%)", title: "Magnetosphere Pulsar Core Engine", hint: "⚡ Neutron physics focusing dual polar relativistic light-speed jets.", border: "#ffff00" },
+                magnetar: { bg: "linear-gradient(180deg, #250000 0%, #050000 100%)", title: "Extreme Magnetar Flux Field System", hint: "🧲 Periodic high-intensity gamma flare displacement spikes.", border: "#ff1100" },
+                kilonova: { bg: "linear-gradient(180deg, #202025 0%, #020205 100%)", title: "Binary Neutron Star Collision (Kilonova)", hint: "💥 Catastrophic un-directed radioactive neutron capture heavy-element expansion warp.", border: "#ffffff" },
+                supernova1a: { bg: "linear-gradient(180deg, #251020 0%, #050204 100%)", title: "Type Ia Supernova (White Dwarf Carbon Detonation)", hint: "✨ Uniform standard candle explosion shell showing symmetric, blinding white-pink expansion fronts.", border: "#ffaaef" },
+                supernova2: { bg: "linear-gradient(180deg, #250015 0%, #040003 100%)", title: "Type II Supernova (Iron Core Collapse)", hint: "💥 Violent asymmetric shock front expanding rapidly from a collapsed massive star core.", border: "#ff33aa" },
+                przybylski: { bg: "linear-gradient(180deg, #001f1a 0%, #000202 100%)", title: "Przybylski's Chemical Outlaw Star", hint: "🧪 Rapidly oscillating peculiar Ap star driven by unstable lanthanide and actinide isotopes.", border: "#00ffcc" },
+                tabbystar: { bg: "linear-gradient(180deg, #140520 0%, #030105 100%)", title: "Tabby's Star (Erratic Mega-Debris Cloud)", hint: "🧱 Sharp, chaotic, highly unpredictable occlusion dips tracking fragmented debris screens.", border: "#ae81ff" },
+
+                mercury: { bg: "linear-gradient(180deg, #101010 0%, #020202 100%)", title: "Mercury Exosphere Boundary", hint: "☄️ Dynamic solar wind weathering on heavy iron planet shell core structures.", border: "#8a8a8a" },
+                venus: { bg: "linear-gradient(180deg, #201305 0%, #040200 100%)", title: "Venus Super-Centrifugal Fluid Overlay", hint: "🌋 Sulfuric atmosphere looping 60x faster than planet core rotation parameters.", border: "#e39b5d" },
+                earth: { bg: "linear-gradient(180deg, #000f20 0%, #000205 100%)", title: "Earth Core & Protective Magnetosphere", hint: "🌍 Dynamic dayside compression forming a blue magnetic bow-shock wave boundary.", border: "#00aaff" },
+                mars: { bg: "linear-gradient(180deg, #200a05 0%, #040100 100%)", title: "Mars Ionization Solar Wind Fray", hint: "🔴 Unshielded planet profiles leaking trails of light iron-oxide dust into space.", border: "#c1440e" },
+                jupiter: { bg: "linear-gradient(180deg, #221405 0%, #030100 100%)", title: "Jupiter Zonal Velocity Shear Matrix", hint: "🪐 Counter-rotating high-velocity jet bands directly shifting tensor grid metrics.", border: "#d4a373" },
+                saturn: { bg: "linear-gradient(180deg, #221e15 0%, #030201 100%)", title: "Saturnian Rings & Oblate Metric Engine", hint: "🪐 Polar flattening compression projecting wide, fine pastel icy-debris disks.", border: "#f4e2bb" },
+                uranus: { bg: "linear-gradient(180deg, #08182a 0%, #01040a 100%)", title: "Uranus Extreme Axial Plane Tilt", hint: "🧊 System shifted exactly 98 degrees relative to Z-axis with hyper-thin vertical debris paths.", border: "#4b70dd" },
+                neptune: { bg: "linear-gradient(180deg, #020a20 0%, #000208 100%)", title: "Neptune Supersonic Storm Core", hint: "🌀 Methane ice matrices driven by ultra-high-speed thermal winds.", border: "#274687" },
+                pluto: { bg: "linear-gradient(180deg, #181c1a 0%, #030404 100%)", title: "Pluto Dwarf Planetary Core System", hint: "🌑 High-eccentricity inclined orbit matrix ($17^\circ$ tilt parameter offset).", border: "#9fa8a3" },
+
+                hotjupiter: { bg: "linear-gradient(180deg, #2a1000 0%, #050200 100%)", title: "Exoplanet: Hot Jupiter Profile", hint: "🔥 Tidally locked extreme thermal shearing with intense wind drag stretching lattice lines.", border: "#ff7700" },
+                superearth: { bg: "linear-gradient(180deg, #052005 0%, #000400 100%)", title: "Exoplanet: Super-Earth High Gravity", hint: "⛰️ Hyper-compressed structural density pulling node spacing tightly inward toward the origin.", border: "#55ff55" },
+                rogueplanet: { bg: "linear-gradient(180deg, #0b1018 0%, #010204 100%)", title: "Exoplanet: Interstellar Rogue Planet", hint: "🌌 Dark, isolated coordinate separation drifting outside the central system gravitational grip.", border: "#3a4454" },
+
+                milkyway: { bg: "linear-gradient(180deg, #150025 0%, #020005 100%)", title: "Milky Way Sagittarius A* Horizon", hint: "🌌 Spiral core density rows shearing tightly into an event-horizon matrix trap.", border: "#9933ff" },
+                spiralgalaxy: { bg: "linear-gradient(180deg, #001f15 0%, #000502 100%)", title: "Grand Design Spiral Manifold", hint: "🌀 Logarithmic density-wave vectors generating high-intensity star burst nursery patterns.", border: "#00ffaa" },
+                hoagsobject: { bg: "linear-gradient(180deg, #1f1500 0%, #040200 100%)", title: "Hoag's Object Detached Ring Galaxy", hint: "⭕ Perfect golden core separated by a vast empty gap from a brilliant blue ring structure.", border: "#ffbb00" },
+                quarkstar: { bg: "linear-gradient(180deg, #100025 0%, #020008 100%)", title: "Exotic Degenerate Quark Star Lattice", hint: "⚛️ Ultra-dense subatomic matter state vibrating at maximum lattice frequency line constraints.", border: "#8e2de2" },
+                blackhole: { bg: "linear-gradient(180deg, #0a0a0d 0%, #010102 100%)", title: "Stellar-Mass Black Hole Matrix Sink", hint: "🕳️ Clean $1/r$ Newtonian tensor singularity warping near-field points inside critical radius boundaries.", border: "#444444" },
+                sagittariusa: { bg: "linear-gradient(180deg, #20000a 0%, #010001 100%)", title: "Sagittarius A* Gravitational Lensing Matrix", hint: "🚨 Severe relativistic photon ring trapping nodes within critical radii into a spinning event horizon.", border: "#ff0055" },
+                pillars: { bg: "linear-gradient(180deg, #002010 0%, #000301 100%)", title: "The Pillars of Creation", hint: "🌲 High-density interstellar gas fingers housing glowing star nursery birth vectors inside tips.", border: "#00ff66" },
+                bootesvoid: { bg: "linear-gradient(180deg, #08080c 0%, #000002 100%)", title: "The Boötes Void (The Great Vacuum Shell)", hint: "🚏 Inverse-cube metric clearing all interior lattice points out into isolated perimeter boundaries.", border: "#555566" }
+            };
+            const t = themes[activeOverlayMode] || themes.default;
+            panel.style.background = t.bg; banner.innerText = t.title; hint.innerText = t.hint;
+            if (t.border) { panel.style.borderColor = t.border; document.body.style.color = t.border; scene.background = new THREE.Color(t.border).multiplyScalar(0.015); }
+        }
+
+        presetSelect.addEventListener('change', (e) => {
+            currentSystem = e.target.value; applySystemEnforcement();
+            if (currentSystem === "cubic") { pB.value = 1.0; pC.value = 1.0; }
+            else if (currentSystem === "tetragonal") { pA.value = 0.8; pB.value = 0.8; pC.value = 1.4; }
+            else if (currentSystem === "orthorhombic") { pA.value = 0.6; pB.value = 1.0; pC.value = 1.4; }
+            else if (currentSystem === "monoclinic") { pA.value = 0.8; pB.value = 1.0; pC.value = 1.3; pBeta.value = 65.0; }
+            else if (currentSystem === "triclinic") { pA.value = DEFAULTS.a; pB.value = DEFAULTS.b; pC.value = DEFAULTS.c; pAlpha.value = DEFAULTS.alpha; pBeta.value = DEFAULTS.beta; pGamma.value = DEFAULTS.gamma; }
+        });
+
+        const pA = document.getElementById('paramA'); const pB = document.getElementById('paramB'); const pC = document.getElementById('paramC');
+        const pAlpha = document.getElementById('paramAlpha'); const pBeta = document.getElementById('paramBeta'); const pGamma = document.getElementById('paramGamma');
+        const masterLabel = document.getElementById('master-label'); const speedLabel = document.getElementById('speed-label');
+        const pfiSpeedLabel = document.getElementById('pfi-speed-label'); const conduitLabel = document.getElementById('conduit-label');
+        const labelA = document.getElementById('a-label'); const labelB = document.getElementById('b-label'); const labelC = document.getElementById('c-label');
+        const labelAlpha = document.getElementById('alpha-label'); const labelBeta = document.getElementById('beta-label'); const labelGamma = document.getElementById('gamma-label');
+
+        function applySystemEnforcement() {
+            pA.disabled = false; pB.disabled = false; pC.disabled = false; pAlpha.disabled = false; pBeta.disabled = false; pGamma.disabled = false;
+            switch(currentSystem) {
+                case "cubic": pB.disabled = true; pC.disabled = true; pAlpha.disabled = true; pBeta.disabled = true; pGamma.disabled = true; pAlpha.value = 90; pBeta.value = 90; pGamma.value = 90; break;
+                case "tetragonal": pB.disabled = true; pAlpha.disabled = true; pBeta.disabled = true; pGamma.disabled = true; pAlpha.value = 90; pBeta.value = 90; pGamma.value = 90; break;
+                case "orthorhombic": pAlpha.disabled = true; pBeta.disabled = true; pGamma.disabled = true; pAlpha.value = 90; pBeta.value = 90; pGamma.value = 90; break;
+                case "monoclinic": pAlpha.disabled = true; pGamma.disabled = true; pAlpha.value = 90; pGamma.value = 90; break;
+            }
+        }
+        function syncLocks() { if (currentSystem === "cubic") { pB.value = pA.value; pC.value = pA.value; } else if (currentSystem === "tetragonal") { pB.value = pA.value; } }
+        pA.addEventListener('input', syncLocks); applySystemEnforcement();
+
+        // --- KINETIC SIMULATION MATRIX LOOPS ---
+        let clock = new THREE.Clock(); let globalTime = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            let delta = Math.min(clock.getDelta(), 0.1); controls.update();
+
+            let rawTurbulence = parseFloat(speedSlider.value); let pfiSpeed = parseFloat(pfiSpeedSlider.value); let rawGlow = parseFloat(conduitSlider.value);
+            let simSpeed = (rawTurbulence <= 0.02) ? 0.0 : rawTurbulence; let overlayIntensity = (rawGlow <= 0.01) ? 0.0 : rawGlow;
+
+            speedLabel.innerText = simSpeed === 0 ? "🌊 WAVE TURBULENCE: FROZEN" : "🌊 WAVE TURBULENCE: " + simSpeed.toFixed(1) + "x";
+            pfiSpeedLabel.innerText = "⏳ P.F.I. LOOP SPEED: " + pfiSpeed.toFixed(1) + "x";
+            conduitLabel.innerText = overlayIntensity === 0 ? "✨ GLOW FIELD: MUTED" : "✨ GLOW FIELD: " + overlayIntensity.toFixed(2);
+
+            if (automationActive) {
+                let val = parseFloat(masterSlider.value) + delta * 0.05 * automationDirection * pfiSpeed;
+                if (val >= 1.0) { val = 1.0; automationDirection = -1; } if (val <= 0.0) { val = 0.0; automationDirection = 1; }
+                masterSlider.value = val;
+            }
+            let mVal = parseFloat(masterSlider.value); masterLabel.innerText = "🌌 P.F.I. INDEX: " + mVal.toFixed(3);
+
+            labelA.innerText = "Vector [a]: " + parseFloat(pA.value).toFixed(2); labelB.innerText = "Vector [b]: " + parseFloat(pB.value).toFixed(2); labelC.innerText = "Vector [c]: " + parseFloat(pC.value).toFixed(2);
+            labelAlpha.innerText = "Shear [α]: " + parseFloat(pAlpha.value).toFixed(1) + "°"; labelBeta.innerText = "Shear [β]: " + parseFloat(pBeta.value).toFixed(1) + "°"; labelGamma.innerText = "Shear [γ]: " + parseFloat(pGamma.value).toFixed(1) + "°";
+
+            globalTime += delta * 1.5 * simSpeed;
+
+            let rAlpha = (parseFloat(pAlpha.value) * Math.PI) / 180; let rBeta  = (parseFloat(pBeta.value) * Math.PI) / 180; let rGamma = (parseFloat(pGamma.value) * Math.PI) / 180;
+            let cAlpha = Math.cos(rAlpha); let cBeta = Math.cos(rBeta); let cGamma = Math.cos(rGamma); let sGamma = Math.sin(rGamma);
+            let factorV = Math.sqrt(1 - cAlpha*cAlpha - cBeta*cBeta - cGamma*cGamma + 2*cAlpha*cBeta*cGamma);
+            let va = parseFloat(pA.value); let vb = parseFloat(pB.value); let vc = parseFloat(pC.value);
+
+            let inflationScale = Math.pow(mVal, 2.2) * 1.8 + 0.01; let visibilityOpacity = Math.min(1.0, mVal * 3.0);
+
+            let activePointsCount = (trackingViewMode === "manifold") ? totalPointsManifold : totalPointsGrid;
+            let activeBaseCoords  = (trackingViewMode === "manifold") ? baseCoordsManifold : baseCoordsGrid;
+            let activePositions   = (trackingViewMode === "manifold") ? dynPosManifold : dynPosGrid;
+            let activeColors      = (trackingViewMode === "manifold") ? dynColManifold : dynColGrid;
+            let activePlasmaArray = (trackingViewMode === "manifold") ? dynPlasmManifold : dynPlasmGrid;
+
+            let activeLineMesh    = (trackingViewMode === "manifold") ? meshManifoldLines : meshGridLines;
+            let activePlasmaMesh  = (trackingViewMode === "manifold") ? meshManifoldPlasm : meshGridPlasm;
+            let activeGeomNodes   = (trackingViewMode === "manifold") ? geomManifoldNodes : geomGridNodes;
+            let activeGeomLines   = (trackingViewMode === "manifold") ? geomManifoldLines : geomGridLines;
+            let activeGeomPlasm   = (trackingViewMode === "manifold") ? geomManifoldPlasm : geomGridPlasm;
+
+            for (let i = 0; i < activePointsCount; i++) {
+                let bx = activeBaseCoords[i * 3]; let by = activeBaseCoords[i * 3 + 1]; let bz = activeBaseCoords[i * 3 + 2];
+                let tx = bx, ty = by, tz = bz;
+
+                if (trackingViewMode === "manifold") {
+                    let uVal = uvParamManifold[i * 2]; let vVal = uvParamManifold[i * 2 + 1];
+                    let compressFactor = Math.pow(mVal, 2.0);
+                    let unrollX = bx * compressFactor + (1.0 - compressFactor) * Math.sin(uVal) * 0.08;
+                    let unrollY = by * compressFactor + (1.0 - compressFactor) * Math.cos(vVal) * 0.08;
+                    let unrollZ = bz * compressFactor + (1.0 - compressFactor) * Math.sin(uVal + vVal) * 0.04;
+
+                    let displacementFactor = 0.04;
+                    if (activeOverlayMode === "bluegiant") displacementFactor = 0.12 * (fbm(bx*1.2, by*1.2 + globalTime, bz*1.2, 2) + 0.5);
+                    if (activeOverlayMode === "magnetar") displacementFactor = 0.18 * Math.pow(Math.sin(globalTime * 3.0 + bx), 6.0);
+                    if (activeOverlayMode === "kilonova") displacementFactor = 1.5 * (Math.sin(globalTime * 0.8) * 0.5 + 0.6);
+                    if (["supernova1a", "supernova2"].includes(activeOverlayMode)) {
+                        displacementFactor = 2.0 * (Math.sin(globalTime * 1.8) * 0.4 + 0.7);
+                    }
+                    if (activeOverlayMode === "przybylski") displacementFactor = 0.09 * Math.sin(globalTime * 8.5 + by);
+                    if (activeOverlayMode === "quarkstar") displacementFactor = 0.01 * Math.sin(globalTime * 15.0 + bx);
+                    if (activeOverlayMode === "milkyway") { let rD = Math.sqrt(bx*bx + by*by + bz*bz); displacementFactor = -0.3 / (rD + 0.4); }
+
+                    // --- V25.0 NEW PHYSICAL MANIFOLD DEVIATIONS ---
+                    if (activeOverlayMode === "pluto") {
+                        // Rotate Pluto coordinates by 17 degrees along x/z plane to track inclined ecliptic skew
+                        let pCos = Math.cos(0.30); let pSin = Math.sin(0.30);
+                        let tempX = unrollX;
+                        unrollX = unrollX * pCos - unrollZ * pSin;
+                        unrollZ = tempX * pSin + unrollZ * pCos;
+                    }
+                    if (activeOverlayMode === "hotjupiter") {
+                        // Severe equatorially locked rapid shearing profile
+                        let drag = Math.sin(vVal) * 1.5;
+                        unrollX += Math.cos(uVal + globalTime * 4.0) * 0.12;
+                    }
+                    if (activeOverlayMode === "superearth") {
+                        // Severe internal structural contraction pull towards origin center
+                        unrollX *= 0.65; unrollY *= 0.65; unrollZ *= 0.65;
+                    }
+                    if (activeOverlayMode === "rogueplanet") {
+                        // Translate the entire coordinate grid along a steady linear drift path vector away from origin center
+                        unrollX += 0.8; unrollZ -= 0.4;
+                    }
+                    if (activeOverlayMode === "blackhole") {
+                        let rLen = Math.sqrt(unrollX*unrollX + unrollY*unrollY + unrollZ*unrollZ) + 0.01;
+                        let pull = Math.max(0.1, 1.0 - (0.5 / rLen));
+                        unrollX *= pull; unrollY *= pull; unrollZ *= pull;
+                    }
+                    if (activeOverlayMode === "sagittariusa") {
+                        let rSq = Math.sqrt(unrollX*unrollX + unrollY*unrollY + unrollZ*unrollZ);
+                        if (rSq < 1.4) { unrollX *= (rSq * 0.4); unrollY *= (rSq * 0.4); unrollZ *= (rSq * 0.4); }
+                    }
+                    if (activeOverlayMode === "venus") unrollX += Math.sin(vVal*3.0 + globalTime * 5.5) * 0.07;
+                    if (activeOverlayMode === "earth" && unrollX > 0.3) unrollX *= (0.85 + Math.sin(globalTime*1.5 + unrollY)*0.05);
+                    if (activeOverlayMode === "mars" && unrollX < -0.2) { unrollY += Math.sin(globalTime*2.0 + unrollZ)*0.08; unrollZ += Math.cos(globalTime*2.0 + unrollY)*0.08; }
+                    if (activeOverlayMode === "jupiter") { let latSpeed = Math.sin(by * 4.0) * 0.5; unrollX += Math.sin(uVal + globalTime * latSpeed) * 0.05; }
+                    if (activeOverlayMode === "saturn") unrollY *= 0.82;
+                    if (activeOverlayMode === "uranus") { let tempY = unrollY; unrollY = unrollY * Math.cos(1.71) - unrollZ * Math.sin(1.71); unrollZ = tempY * Math.sin(1.71) + unrollZ * Math.cos(1.71); }
+                    if (activeOverlayMode === "pillars") {
+                        if (unrollX < -0.5) { unrollY *= 2.5; unrollX += Math.sin(unrollY*1.5)*0.2; }
+                        else if (unrollX > 0.5) { unrollY *= 1.8; unrollZ += 0.4; }
+                        else { unrollY *= 2.1; unrollX -= 0.2; }
+                    }
+                    if (activeOverlayMode === "bootesvoid") {
+                        let rSq = Math.sqrt(unrollX*unrollX + unrollY*unrollY + unrollZ*unrollZ) + 0.1;
+                        let push = 1.0 + (1.5 / Math.pow(rSq, 2.0));
+                        unrollX *= push; unrollY *= push; unrollZ *= push;
+                    }
+
+                    let waveBreathe = 1.0 + displacementFactor * Math.sin(globalTime * 1.4 + Math.sqrt(bx*bx+by*by) * 2.5) * mVal;
+                    tx = unrollX * waveBreathe * (1.0 + inflationScale);
+                    ty = unrollY * waveBreathe * (1.0 + inflationScale);
+                    tz = unrollZ * waveBreathe * (1.0 + inflationScale);
+                } else {
+                    tx = bx * Math.pow(mVal, 2.5); ty = by * Math.pow(mVal, 2.5); tz = bz * Math.pow(mVal, 2.5);
+                }
+
+                let triX = va * tx + vb * cGamma * ty + vc * cBeta * tz;
+                let triY = vb * sGamma * ty + vc * ((cAlpha - cBeta * cGamma) / sGamma) * tz;
+                let triZ = vc * (factorV / sGamma) * tz;
+
+                activePositions[i * 3]     = triX;
+                activePositions[i * 3 + 1] = triY;
+                activePositions[i * 3 + 2] = triZ;
+
+                let rRad = Math.sqrt(triX*triX + triY*triY + triZ*triZ);
+
+                // --- SHADER BOUNDS DISPATCH MATRIX (V25.0 SOLID STATE LOCK RESETS) ---
+                if (activeOverlayMode === "default") {
+                    let normR = THREE.MathUtils.clamp((rRad / 3.4), 0.0, 1.0);
+                    if (normR < 0.25) { activeColors[i*3] = THREE.MathUtils.lerp(0.8, 0.0, normR/0.25); activeColors[i*3+1] = 0.0; activeColors[i*3+2] = 1.0; }
+                    else if (normR < 0.5) { activeColors[i*3] = 0.0; activeColors[i*3+1] = THREE.MathUtils.lerp(0.0, 1.0, (normR-0.25)/0.25); activeColors[i*3+2] = THREE.MathUtils.lerp(1.0, 0.0, (normR-0.25)/0.25); }
+                    else if (normR < 0.75) { activeColors[i*3] = THREE.MathUtils.lerp(0.0, 1.0, (normR-0.5)/0.25); activeColors[i*3+1] = THREE.MathUtils.lerp(1.0, 0.5, (normR-0.5)/0.25); activeColors[i*3+2] = 0.0; }
+                    else { activeColors[i*3] = THREE.MathUtils.lerp(1.0, 0.6, (normR-0.75)/0.25); activeColors[i*3+1] = THREE.MathUtils.lerp(0.5, 0.0, (normR-0.75)/0.25); activeColors[i*3+2] = 0.0; }
+                }
+                else if (activeOverlayMode === "plasma") {
+                    let factor = THREE.MathUtils.clamp((rRad / 3.0), 0.0, 1.0);
+                    activeColors[i*3] = THREE.MathUtils.lerp(0.45, 1.0, factor * mVal); activeColors[i*3+1] = 0.0; activeColors[i*3+2] = THREE.MathUtils.lerp(1.0, 0.5, factor);
+                }
+                else if (activeOverlayMode === "sun") {
+                    let heat = THREE.MathUtils.clamp(0.5 + fbm(triX*1.5, triY*1.5+globalTime*0.5, triZ*1.5, 3)*0.5 - ((rRad/3.6)*0.35), 0.0, 1.0);
+                    activeColors[i*3] = THREE.MathUtils.lerp(0.5, 1.0, heat); activeColors[i*3+1] = THREE.MathUtils.lerp(0.0, 0.85, heat*1.2); activeColors[i*3+2] = THREE.MathUtils.lerp(0.0, 0.3, heat*2.0);
+                }
+                else if (activeOverlayMode === "bluegiant") {
+                    let heat = THREE.MathUtils.clamp(0.4 + fbm(triX*2.2, triY*2.2+globalTime*0.9, triZ*2.2, 3)*0.6, 0.0, 1.0);
+                    activeColors[i*3] = THREE.MathUtils.lerp(0.1, 0.7, heat); activeColors[i*3+1] = THREE.MathUtils.lerp(0.6, 1.0, heat); activeColors[i*3+2] = 1.0;
+                }
+                else if (activeOverlayMode === "pulsar") {
+                    let zScale = Math.abs(triZ) / 3.0; activeColors[i*3] = THREE.MathUtils.lerp(0.3, 1.0, zScale); activeColors[i*3+1] = THREE.MathUtils.lerp(0.7, 1.0, zScale); activeColors[i*3+2] = 1.0;
+                }
+                else if (activeOverlayMode === "magnetar") {
+                    let flash = Math.pow(Math.sin(globalTime * 3.5 + triX), 10.0); activeColors[i*3] = 1.0; activeColors[i*3+1] = THREE.MathUtils.lerp(0.1, 0.9, flash); activeColors[i*3+2] = THREE.MathUtils.lerp(0.0, 0.3, flash);
+                }
+                else if (activeOverlayMode === "kilonova") {
+                    let flash = fbm(triX, triY+globalTime, triZ, 2); activeColors[i*3] = 1.0; activeColors[i*3+1] = THREE.MathUtils.lerp(0.8, 1.0, flash); activeColors[i*3+2] = THREE.MathUtils.lerp(0.3, 1.0, flash);
+                }
+                else if (activeOverlayMode === "supernova1a") {
+                    let shell = Math.sin(rRad * 2.0 - globalTime * 3.0) * 0.5 + 0.5;
+                    activeColors[i*3] = 1.0; activeColors[i*3+1] = THREE.MathUtils.lerp(0.6, 0.9, shell); activeColors[i*3+2] = THREE.MathUtils.lerp(0.7, 1.0, shell);
+                }
+                else if (activeOverlayMode === "supernova2") {
+                    let shell = fbm(triX * 1.5 - globalTime, triY, triZ, 3);
+                    activeColors[i*3] = 1.0; activeColors[i*3+1] = THREE.MathUtils.lerp(0.0, 0.4, shell); activeColors[i*3+2] = THREE.MathUtils.lerp(0.4, 0.8, shell);
+                }
+                else if (activeOverlayMode === "przybylski") {
+                    let spike = Math.sin(triX*10.0 + globalTime*12.0); activeColors[i*3] = THREE.MathUtils.lerp(0.0, 0.3, spike); activeColors[i*3+1] = 1.0; activeColors[i*3+2] = THREE.MathUtils.lerp(0.5, 0.9, spike);
+                }
+                else if (activeOverlayMode === "tabbystar") {
+                    let occlude = (Math.floor(globalTime * 0.7) % 5 === 0) ? 0.18 : 1.0;
+                    activeColors[i*3] = 0.68 * occlude; activeColors[i*3+1] = 0.45 * occlude; activeColors[i*3+2] = 1.0 * occlude; // Locked spectrum metrics
+                }
+                else if (activeOverlayMode === "mercury") { activeColors[i*3] = activeColors[i*3+1] = activeColors[i*3+2] = THREE.MathUtils.lerp(0.3, 0.6, fbm(triX*3,triY,triZ)+0.5); }
+                else if (activeOverlayMode === "venus") {
+                    let acid = fbm(triX*2.0 + globalTime*0.9, triY*2.0, triZ*2.0, 2);
+                    activeColors[i*3] = THREE.MathUtils.lerp(0.85, 0.55, acid); activeColors[i*3+1] = THREE.MathUtils.lerp(0.55, 0.25, acid); activeColors[i*3+2] = 0.15;
+                }
+                else if (activeOverlayMode === "earth") {
+                    if (triX > 2.0 && Math.abs(triY) < 1.5) { activeColors[i*3] = 0.0; activeColors[i*3+1] = 0.6; activeColors[i*3+2] = 1.0; }
+                    else {
+                        let land = fbm(triX*1.2, triY*1.2, triZ*1.2, 3);
+                        activeColors[i*3] = land > 0.08 ? 0.15 : 0.02; activeColors[i*3+1] = land > 0.08 ? 0.38 : 0.25; activeColors[i*3+2] = land > 0.08 ? 0.05 : 0.85;
+                    }
+                }
+                else if (activeOverlayMode === "mars") {
+                    let iron = fbm(triX*2.2, triY*2.2, triZ*2.2, 2);
+                    activeColors[i*3] = THREE.MathUtils.lerp(0.75, 0.95, iron); activeColors[i*3+1] = THREE.MathUtils.lerp(0.25, 0.40, iron); activeColors[i*3+2] = 0.12;
+                }
+                else if (activeOverlayMode === "jupiter") {
+                    let latFactor = Math.sin(triY * 7.5 + fbm(triX*0.6, triY, triZ, 2)*2.2); let pct = latFactor * 0.5 + 0.5;
+                    activeColors[i*3] = THREE.MathUtils.lerp(0.76, 0.40, pct); activeColors[i*3+1] = THREE.MathUtils.lerp(0.52, 0.24, pct); activeColors[i*3+2] = THREE.MathUtils.lerp(0.38, 0.15, pct);
+                }
+                else if (activeOverlayMode === "saturn") {
+                    let flatRad = Math.sqrt(triX*triX + triZ*triZ); let isRing = (flatRad > 2.0 && flatRad < 3.8 && Math.abs(triY) < 0.3);
+                    if (isRing) { let ringD = Math.sin(flatRad * 35.0) * 0.5 + 0.5; activeColors[i*3] = THREE.MathUtils.lerp(0.85, 0.65, ringD); activeColors[i*3+1] = THREE.MathUtils.lerp(0.78, 0.58, ringD); activeColors[i*3+2] = 0.50; }
+                    else { let bands = Math.sin(triY * 12.0) * 0.5 + 0.5; activeColors[i*3] = THREE.MathUtils.lerp(0.93, 0.80, bands); activeColors[i*3+1] = THREE.MathUtils.lerp(0.85, 0.72, bands); activeColors[i*3+2] = 0.60; }
+                }
+                else if (activeOverlayMode === "uranus") {
+                    let vertRad = Math.sqrt(triX*triX + triY*triY);
+                    if (vertRad > 1.9 && vertRad < 2.6 && Math.abs(triZ) < 0.25) { activeColors[i*3] = 0.6; activeColors[i*3+1] = 0.8; activeColors[i*3+2] = 0.9; }
+                    else { activeColors[i*3] = 0.35; activeColors[i*3+1] = 0.65; activeColors[i*3+2] = 0.78; }
+                }
+                else if (activeOverlayMode === "neptune") { let storm = fbm(triX*1.5+globalTime*0.6, triY*1.5, triZ*1.5, 2); activeColors[i*3] = 0.05; activeColors[i*3+1] = THREE.MathUtils.lerp(0.2, 0.4, storm); activeColors[i*3+2] = THREE.MathUtils.lerp(0.6, 0.9, storm); }
+                else if (activeOverlayMode === "pluto") {
+                    let ice = fbm(triX*2.0, triY*2.0, triZ*2.0, 1);
+                    activeColors[i*3] = THREE.MathUtils.lerp(0.4, 0.65, ice); activeColors[i*3+1] = THREE.MathUtils.lerp(0.42, 0.68, ice); activeColors[i*3+2] = 0.7;
+                }
+                else if (activeOverlayMode === "hotjupiter") {
+                    let flare = Math.sin(triX * 5.0 + globalTime * 6.0) * 0.5 + 0.5;
+                    activeColors[i*3] = 1.0; activeColors[i*3+1] = THREE.MathUtils.lerp(0.2, 0.5, flare); activeColors[i*3+2] = 0.0;
+                }
+                else if (activeOverlayMode === "superearth") {
+                    activeColors[i*3] = 0.1; activeColors[i*3+1] = 0.8; activeColors[i*3+2] = 0.3;
+                }
+                else if (activeOverlayMode === "rogueplanet") {
+                    activeColors[i*3] = 0.2; activeColors[i*3+1] = 0.25; activeColors[i*3+2] = 0.35;
+                }
+                else if (activeOverlayMode === "blackhole") {
+                    if (rRad < 0.4) { activeColors[i*3] = activeColors[i*3+1] = activeColors[i*3+2] = 0.0; }
+                    else { activeColors[i*3] = activeColors[i*3+1] = activeColors[i*3+2] = 0.4; }
+                }
+                else if (activeOverlayMode === "sagittariusa") {
+                    if (rRad < 0.5) { activeColors[i*3] = activeColors[i*3+1] = activeColors[i*3+2] = 0.0; }
+                    else { activeColors[i*3] = 1.0; activeColors[i*3+1] = 0.0; activeColors[i*3+2] = 0.35; }
+                }
+                else if (activeOverlayMode === "pillars") {
+                    let gas = fbm(triX, triY*0.5, triZ, 2); activeColors[i*3] = THREE.MathUtils.lerp(0.1, 0.0, gas); activeColors[i*3+1] = 1.0; activeColors[i*3+2] = THREE.MathUtils.lerp(0.4, 0.2, gas);
+                }
+                else if (activeOverlayMode === "bootesvoid") {
+                    activeColors[i*3] = 0.06; activeColors[i*3+1] = 0.06; activeColors[i*3+2] = 0.09;
+                }
+                else if (activeOverlayMode === "milkyway") { let horizon = THREE.MathUtils.clamp(1.2 / (rRad + 0.2), 0.0, 1.0); activeColors[i*3] = THREE.MathUtils.lerp(0.2, 0.8, horizon); activeColors[i*3+1] = THREE.MathUtils.lerp(0.1, 0.3, horizon); activeColors[i*3+2] = THREE.MathUtils.lerp(0.5, 1.0, horizon); }
+                else if (activeOverlayMode === "spiralgalaxy") { let theta = Math.atan2(triY, triX); let arms = Math.sin(theta*2.0 - rRad*2.5 + globalTime*0.4); let d = THREE.MathUtils.clamp(arms*0.5+0.5, 0.0, 1.0); activeColors[i*3] = THREE.MathUtils.lerp(0.1, 0.0, d); activeColors[i*3+1] = THREE.MathUtils.lerp(0.3, 1.0, d); activeColors[i*3+2] = THREE.MathUtils.lerp(0.6, 0.9, d); }
+                else if (activeOverlayMode === "hoagsobject") {
+                    if (rRad < 0.7) { activeColors[i*3] = 1.0; activeColors[i*3+1] = 0.82; activeColors[i*3+2] = 0.3; }
+                    else if (rRad > 1.8 && rRad < 2.9) { activeColors[i*3] = 0.1; activeColors[i*3+1] = 0.6; activeColors[i*3+2] = 1.0; }
+                    else { activeColors[i*3] = activeColors[i*3+1] = activeColors[i*3+2] = 0.02; }
+                }
+                else if (activeOverlayMode === "quarkstar") { let buzz = fbm(triX*5.0, triY*5.0, triZ*5.0+globalTime*4.0, 1); activeColors[i*3] = THREE.MathUtils.lerp(0.3, 0.5, buzz); activeColors[i*3+1] = 0.0; activeColors[i*3+2] = 1.0; }
+            }
+
+            // --- CONDUIT PLASMA LINES DISPATCH ROUTER ---
+            let pIdx = 0;
+            for (let i = 0; i < activePointsCount; i++) {
+                let destX = activePositions[i * 3]; let destY = activePositions[i * 3 + 1]; let destZ = activePositions[i * 3 + 2];
+
+                for (let p = 0; p < pointsPerConduit - 1; p++) {
+                    let pct1 = p / (pointsPerConduit - 1); let pct2 = (p + 1) / (pointsPerConduit - 1);
+                    let env1 = Math.sin(pct1 * Math.PI); let env2 = Math.sin(pct2 * Math.PI);
+
+                    let whip = (1.0 - mVal) * 0.18 + 0.08 + (mVal * 0.22);
+                    if (activeOverlayMode === "bluegiant") whip *= 1.6;
+                    if (activeOverlayMode === "magnetar") whip *= 2.8 * Math.pow(Math.sin(globalTime*4.0 + i), 2.0);
+                    if (activeOverlayMode === "kilonova") whip *= 4.5 * (Math.sin(globalTime)*0.4 + 0.6);
+                    if (["supernova1a", "supernova2"].includes(activeOverlayMode)) whip *= 3.5;
+                    if (activeOverlayMode === "quarkstar") whip *= 0.04;
+
+                    let noiseX1 = Math.sin(pct1*5.0 - globalTime*2.5 + i) * whip; let noiseY1 = Math.cos(pct1*4.5 + globalTime*2.8 + i) * whip; let noiseZ1 = Math.sin(pct1*3.5 + globalTime*1.8 - i) * whip;
+                    let noiseX2 = Math.sin(pct2*5.0 - globalTime*2.5 + i) * whip; let noiseY2 = Math.cos(pct2*4.5 + globalTime*2.8 + i) * whip; let noiseZ2 = Math.sin(pct2*3.5 + globalTime*1.8 - i) * whip;
+
+                    if (["sun", "bluegiant", "magnetar", "kilonova", "supernova1a", "supernova2"].includes(activeOverlayMode)) {
+                        let arc = 0.55 * env1 * (1.0 + mVal); noiseX1 += (destX * 0.18) * arc; noiseY1 += (destY * 0.18) * arc;
+                        let arc2 = 0.55 * env2 * (1.0 + mVal); noiseX2 += (destX * 0.18) * arc2; noiseY2 += (destY * 0.18) * arc2;
+                    }
+                    else if (activeOverlayMode === "pulsar") {
+                        let jetPct1 = Math.pow(pct1, 2.5); let jetPct2 = Math.pow(pct2, 2.5); let twist = globalTime * 16.0 + (destZ * 2.0);
+                        activePlasmaArray[pIdx] = Math.sin(twist)*jetPct1*0.6; activePlasmaArray[pIdx+1] = Math.cos(twist)*jetPct1*0.6; activePlasmaArray[pIdx+2] = THREE.MathUtils.lerp(0, (destZ > 0 ? 5.0 : -5.0), pct1);
+                        activePlasmaArray[pIdx+3] = Math.sin(twist)*jetPct2*0.6; activePlasmaArray[pIdx+4] = Math.cos(twist)*jetPct2*0.6; activePlasmaArray[pIdx+5] = THREE.MathUtils.lerp(0, (destZ > 0 ? 5.0 : -5.0), pct2);
+                        pIdx += 6; continue;
+                    }
+                    else if (["spiralgalaxy","milkyway","hoagsobject","sagittariusa","blackhole"].includes(activeOverlayMode)) {
+                        let radH1 = Math.sqrt(destX*destX + destY*destY) * pct1; let angH1 = Math.atan2(destY, destX) + pct1 * 4.0 + globalTime * 0.2;
+                        if (activeOverlayMode === "hoagsobject" && radH1 > 0.5 && radH1 < 1.7) radH1 = 0.0;
+                        if (activeOverlayMode === "sagittariusa" && radH1 < 0.4) radH1 = 0.0;
+                        if (activeOverlayMode === "blackhole" && radH1 < 0.3) radH1 = 0.0;
+                        activePlasmaArray[pIdx] = Math.cos(angH1) * radH1; activePlasmaArray[pIdx+1] = Math.sin(angH1) * radH1; activePlasmaArray[pIdx+2] = destZ * pct1;
+
+                        let radH2 = Math.sqrt(destX*destX + destY*destY) * pct2; let angH2 = Math.atan2(destY, destX) + pct2 * 4.0 + globalTime * 0.2;
+                        if (activeOverlayMode === "hoagsobject" && radH2 > 0.5 && radH2 < 1.7) radH2 = 0.0;
+                        if (activeOverlayMode === "sagittariusa" && radH2 < 0.4) radH2 = 0.0;
+                        if (activeOverlayMode === "blackhole" && radH2 < 0.3) radH2 = 0.0;
+                        activePlasmaArray[pIdx+3] = Math.cos(angH2) * radH2; activePlasmaArray[pIdx+4] = Math.sin(angH2) * radH2; activePlasmaArray[pIdx+5] = destZ * pct2;
+                        pIdx += 6; continue;
+                    }
+
+                    activePlasmaArray[pIdx]     = THREE.MathUtils.lerp(0, destX, pct1) + noiseX1 * env1;
+                    activePlasmaArray[pIdx + 1] = THREE.MathUtils.lerp(0, destY, pct1) + noiseY1 * env1;
+                    activePlasmaArray[pIdx + 2] = THREE.MathUtils.lerp(0, destZ, pct1) + noiseZ1 * env1;
+                    activePlasmaArray[pIdx + 3] = THREE.MathUtils.lerp(0, destX, pct2) + noiseX2 * env2;
+                    activePlasmaArray[pIdx + 4] = THREE.MathUtils.lerp(0, destY, pct2) + noiseY2 * env2;
+                    activePlasmaArray[pIdx + 5] = THREE.MathUtils.lerp(0, destZ, pct2) + noiseZ2 * env2;
+                    pIdx += 6;
+                }
+            }
+
+            activeGeomNodes.attributes.position.needsUpdate = true; activeGeomNodes.attributes.color.needsUpdate = true;
+            activeGeomLines.attributes.position.needsUpdate = true; activeGeomPlasm.attributes.position.needsUpdate = true;
+            activeGeomNodes.computeBoundingSphere(); activeGeomLines.computeBoundingSphere(); activeGeomPlasm.computeBoundingSphere();
+
+            // --- RENDER SELECTION MATRICES TINTS ---
+            let dynamicBorderColor = document.getElementById('ui-panel').style.borderColor;
+            activeLineMesh.material.color = new THREE.Color(dynamicBorderColor);
+            activePlasmaMesh.material.color = new THREE.Color(dynamicBorderColor);
+
+            if (activeOverlayMode === "default") { activeLineMesh.material.opacity = 0.04 + (visibilityOpacity*0.15); activePlasmaMesh.material.opacity = overlayIntensity*0.65; }
+            else if (activeOverlayMode === "blackhole") { activeLineMesh.material.opacity = 0.15; activePlasmaMesh.material.opacity = overlayIntensity * 0.4; }
+            else if (["supernova1a", "supernova2"].includes(activeOverlayMode)) { activeLineMesh.material.opacity = 0.02; activePlasmaMesh.material.opacity = overlayIntensity * 0.95; }
+            else { activeLineMesh.material.opacity = 0.04 + (visibilityOpacity*0.12); activePlasmaMesh.material.opacity = overlayIntensity * 0.70; }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>
