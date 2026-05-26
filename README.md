@@ -4,12 +4,13 @@
   
   - Physics Engine
   - Interactable Cycles of Cosmological Objects
-  - Openable in You Browser!💻
+  - Openable in You Browser! [💻](https://kingkongapeboy.github.io/cosmic-simulator/)
   - Based on Triclinic Quantum Cosmology Theory - **For More Info:**[🌌](https://github.com/kingkongapeboy/Triclinic-Quantum-Cosmology)
   
 ------------------------------------------------------------------------------------------------------------------
 *** MUST SEE  ***
   - !!Recommended Settings For Best Visuals!! = Reset, Then Change; P.F.I. Loop Speed: 3, Wave Turbulence: 0.3
+  - !!For Easier to Read Buttons!! = Zoom Page: 150%
 ------------------------------------------------------------------------------------------------------------------
 
 ## COSMIC SIMULATOR SAMPLE IMAGES
